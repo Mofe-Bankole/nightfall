@@ -1,4 +1,9 @@
+use anyhow::anyhow;
+use orchard::value::VALUE_SUM_RANGE;
+use pczt::Pczt;
 use serde::{Deserialize, Serialize};
+use zcash_client_backend::encoding::decode_payment_address;
+use zcash_primitives::memo::Memo;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PcztJson {
@@ -97,4 +102,41 @@ pub struct Prover {
     pub proof_blobs: Vec<String>,
     #[serde(default)]
     pub pczt_signed_tx_hex: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PCZTBuilder {
+    pub network: Network,
+    pub outputs: Outputs,
+    pub memo: Memo,
+}
+
+impl PCZTBuilder {
+    pub fn try_from_json(data: PcztJson) -> Result<Pczt, anyhow::Error> {
+        let shielded = &data.outputs.shielded;
+        if shielded.is_empty() {
+            return Err(anyhow!("No shielded outputs present"));
+        }
+
+        for out in shielded {
+            if out.amount == 0 {
+                return Err(anyhow!("Amount must be > 0"));
+            }
+
+            // Decode the shielded address for the given network.
+            let hrp = data.network.hrp();
+            decode_payment_address(hrp, &out.address)
+                .map_err(|_| anyhow!("Invalid Shielded Address : {}", out.address))?;
+        }
+
+        let hex = &data
+            .prover
+            .pczt_signed_tx_hex
+            .ok_or_else(|| anyhow!("Missing pczt_signed_tx_hex payload"))?;
+
+        let hex_payload = hex.trim_start_matches("0x").trim();
+        let pczt_bytes = hex::decode(hex_payload).map_err(|e| anyhow!("INVALID HEX : {e}"))?;
+
+        Pczt::parse(&pczt_bytes).map_err(|e| anyhow!("Failed to parse PCZT : {e:?}"))
+    }
 }

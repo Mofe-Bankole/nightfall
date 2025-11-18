@@ -25,5 +25,7 @@ reqwest = { version = "0.12", features = ["json"] }
 hex = "0.4"
 zcash_primitives = "0.26.1"
 zcash_proofs = "0.26.1"
+zcash_transparent = "0.6.1"
+zcash_encoding = "0.3.0"
 bcrypt = "0.17.1"
 jsonwebtoken = { version = "10.2.0" , features = ["rust_crypto"] }

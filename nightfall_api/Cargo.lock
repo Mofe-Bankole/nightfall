@@ -1905,6 +1905,7 @@ dependencies = [
  "dotenv",
  "hex",
  "jsonwebtoken",
+ "orchard",
  "pczt",
  "reqwest",
  "serde",
@@ -1914,8 +1915,10 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "zcash_client_backend",
+ "zcash_encoding",
  "zcash_primitives",
  "zcash_proofs",
+ "zcash_transparent",
 ]
 
 [[package]]
@@ -4510,6 +4513,7 @@ dependencies = [
  "blake2b_simd",
  "bs58",
  "core2",
+ "document-features",
  "getset",
  "hex",
  "ripemd 0.1.3",
