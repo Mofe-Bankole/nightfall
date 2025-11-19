@@ -53,6 +53,7 @@ pub async fn sign_up_user(
     Ok(row_to_user(new_user_row))
 }
 
+#[axum_macros::debug_handler]
 pub async fn register_user(
     Extension(pool): Extension<PgPool>,
     Json(payload): Json<CreateUser>,

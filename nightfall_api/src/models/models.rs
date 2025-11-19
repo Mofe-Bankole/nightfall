@@ -1,3 +1,4 @@
+use axum::handler::Handler;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use zcash_client_backend::address::Address;
@@ -7,6 +8,7 @@ pub struct LoginUser {
     pub password: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateUser {
     pub id: String,
     pub email: String,
@@ -14,6 +16,9 @@ pub struct CreateUser {
     pub password: String,
 }
 
+// impl Handler<String, String> for CreateUser {}
+
+#[derive(Debug, Clone, Serialize, Deserialize )]
 pub struct AuthResponse {
     pub user: User,
     pub token: String,
