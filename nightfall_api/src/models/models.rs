@@ -1,5 +1,6 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use zcash_client_backend::address::Address;
 
 pub struct LoginUser {
     pub email: String,
@@ -35,7 +36,8 @@ pub struct User {
     pub user_name: String,
     pub password_hash: String,
     #[serde(default)]
-    pub created_at: chrono::DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -44,4 +46,10 @@ pub struct Claims {
     pub exp: usize,
     pub iat: usize,
     pub email: String,
+}
+
+#[derive(Debug)]
+pub struct Wallet {
+    pub address: Address,
+    pub seed_phrase: Vec<String>,
 }
