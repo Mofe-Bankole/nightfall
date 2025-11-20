@@ -166,9 +166,9 @@ pub struct Prover {
     #[serde(default)]
     pub proof_blobs: Vec<String>,
     #[serde(default)]
-    pub pczt_signed_tx_hex: Option<String>,
-    #[serde(default)]
-    pub anchor: Option<String>, // Merkle tree anchor for notes
+S    pub pczt_signed_tx_hex: Option<String>,
+    // Remove serde(default) for anchor since Anchor does not implement Deserialize
+    pub anchor: Option<Anchor>, // Merkle tree anchor for notes
 }
 
 #[derive(Debug, Clone)]

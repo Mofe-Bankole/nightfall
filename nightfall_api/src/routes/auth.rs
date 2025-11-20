@@ -3,13 +3,15 @@ use crate::{
     utils::constants::SALT_ROUNDS,
 };
 use axum::{
-    extract::{Extension, Json},
+    extract::{Extension, Json, State},
     http::StatusCode,
 };
 use bcrypt::{hash, verify};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
 use sqlx::{Error, PgPool, Row, postgres::PgRow};
+
+//pub struct AuthService;
 
 // Helper function to convert PgRow to User
 fn row_to_user(row: PgRow) -> User {
@@ -53,9 +55,9 @@ pub async fn sign_up_user(
     Ok(row_to_user(new_user_row))
 }
 
-#[axum_macros::debug_handler]
+#[axum::debug_handler]
 pub async fn register_user(
-    Extension(pool): Extension<PgPool>,
+    State(pool): State<PgPool>,
     Json(payload): Json<CreateUser>,
 ) -> Result<Json<AuthResponse>, (StatusCode, Json<ErrorResponse>)> {
     let user = sign_up_user(&pool, &payload).await.map_err(|e| {

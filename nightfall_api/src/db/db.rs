@@ -1,8 +1,5 @@
-use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
+use sqlx::{Pool, Postgres};
 use std::env;
-
-use crate::utils::constants::MAX_CONNECTIONS;
-
 pub type DbPool = Pool<Postgres>;
 
 pub async fn connect_db() -> Result<DbPool, sqlx::Error> {
@@ -11,11 +8,7 @@ pub async fn connect_db() -> Result<DbPool, sqlx::Error> {
     let database_url =
         env::var("DATABASE_URL").expect("DATABASE_URL must be set in environment variables");
 
-    let pool = PgPoolOptions::new()
-        .max_connections(MAX_CONNECTIONS)
-        .min_connections(1)
-        .connect(&database_url)
-        .await?;
+    let pool = sqlx::PgPool::connect(&database_url).await?;
 
     Ok(pool)
 }
