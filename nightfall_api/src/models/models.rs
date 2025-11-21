@@ -1,12 +1,8 @@
-use axum::{
-    Json,
-    response::{IntoResponse, Response},
-};
 use chrono::{DateTime, Utc};
-use reqwest::{Response as ReqwestResponse, StatusCode};
 use serde::{Deserialize, Serialize};
 use zcash_client_backend::address::Address;
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoginUser {
     pub email: String,
     pub password: String,
@@ -34,14 +30,9 @@ pub struct UserResponse {
     pub created_at: chrono::DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub error: String,
-}
-
-impl IntoResponse for ErrorResponse {
-    fn into_response(self) -> Response {
-        (StatusCode::BAD_REQUEST, Json(self)).into_response()
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

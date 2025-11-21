@@ -1,14 +1,12 @@
-use axum::{
-    Extension, Json, Router,
-    routing::{get, post},
-};
-#[allow(unused)]
-use std::{env, error::Error};
-use tokio::net::TcpListener;
+use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use std::io;
 
 use crate::{
     db::db::connect_db,
-    routes::{auth::register_user, wallet::create_wallet},
+    routes::{
+        auth::{register_user, sign_in_user},
+        wallet::create_wallet,
+    },
 };
 
 pub mod db;
@@ -17,34 +15,42 @@ pub mod routes;
 pub mod services;
 pub mod utils;
 
-#[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn index() -> impl Responder {
+    HttpResponse::Ok().json("NIGHTFALL THE API FOR PRIVATE PAYMENTS")
+}
+
+#[actix_web::main]
+async fn main() -> io::Result<()> {
     dotenv::dotenv().ok();
-    // let auth_router = Router::new().route(, method_router)
-    let pool = connect_db().await?;
 
-    let api = Router::new()
-        .route(
-            "/",
-            get(|| async { Json("NIGHTFALL THE API FOR PRIVATE PAYMENTS") }),
-        )
-        .route(
-            "/api/v1/auth/register",
-            post(register_user),
-        )
-            // .route("/api/v1/wallet", post(create_wallet(json)))
-            // .route("/api/v1/wallet/:id/balance", get(retrieve_wallet_balances))
-            // .route("/api/v1/tx/:id", post(get_transaction_by_uuid))
-            // .route("/api/v1/block/latest", post(get_latest_block_height_raw()))
-        // .route("/api/v1/block/:number", post(fetch_block))
-        // .route("/api/v1/health", get(fetch_api_health))
-        // .route("api/v1/tx/pczt/create", post(initialize_transaction))
-        // .route("api/v1/tx/pczt/prove", post(validate_pczt))
-        .with_state(pool);
+    let pool = connect_db()
+        .await
+        .expect("Failed to establish database connection");
 
-    let listener = TcpListener::bind("0.0.0.0:5843").await.unwrap();
-    axum::serve(listener, api).await?;
-    println!("=================   NIGHTFALL THE PRIVATE PAYMENTS API  =================");
+    let pool_data = web::Data::new(pool);
 
-    Ok(())
+    HttpServer::new(move || {
+        App::new()
+            .app_data(pool_data.clone())
+            .route("/", web::get().to(index))
+            .service(
+                web::scope("/api/v1")
+                    .service(
+                        web::scope("/auth")
+                            .route("/register", web::post().to(register_user))
+                            .route("/login", web::post().to(sign_in_user)),
+                    )
+                    .service(
+                        web::scope("/create")
+                            .route("/new/wallet", web::post().to(create_new_wallet)),
+                    )
+                    .service(
+                        web::scope("/pczt").route("/new/wallet", web::post().to(init_transaction)),
+                    )
+                    .route("/wallet", web::post().to(create_wallet)),
+            )
+    })
+    .bind("0.0.0.0:7654")?
+    .run()
+    .await
 }

@@ -1,37 +1,37 @@
 use crate::models::zcash_models::{PCZTBuilder, PcztJson};
-use crate::services::pzct_service;
 use anyhow::anyhow;
-use axum::Json;
 use orchard::builder::{Builder as OrchardBuilder, BundleType};
-use pczt::Pczt;
-use std::ops::Deref;
 use std::path::Path;
 use tonic::transport::{Channel, Endpoint};
 use zcash_proofs::prover::LocalTxProver;
 use zcash_protocol::consensus::{Parameters, TEST_NETWORK, TestNetwork};
-use zcash_protocol::value::Zatoshis;
-use zcash_transparent::address::TransparentAddress;
 
-pub fn build_unsigned(Json(payload): Json<PcztJson>) -> Result<(), anyhow::Error> {
+pub fn build_unsigned(payload: PcztJson) -> Result<(), anyhow::Error> {
     let local_prover = LocalTxProver::new(
         &Path::new("./sapling-spend.params"),
         &Path::new("./sapling-output.params"),
     );
 
-    let ver_key = local_prover.verifying_keys();
     let anchor = payload
         .prover
         .anchor
         .as_ref()
-        .ok_or_else(|| anyhow!("MISSING ORCHARD ANCHOR"))?;
-    let builder = PCZTBuilder::try_from_json(payload);
+        .ok_or_else(|| anyhow!("MISSING ORCHARD ANCHOR"))?
+        .clone();
+
+    let builder = PCZTBuilder::try_from_json(payload)?;
+
+    // Use the correct types for BundleType::Transactional
+    // `flags` expects an orchard::Flags, `bundle_required` expects a bool
+    // Here we use orchard::Flags::from_parts(false, false) as an example; replace as needed.
     let bundle_type = BundleType::Transactional {
-        flags: (),
-        bundle_required: (),
+        flags: orchard::bundle::Flags::from_parts(false, false),
+        bundle_required: true,
     };
 
-    let final_build = OrchardBuilder::new(bundle_type, anchor.clone());
-    let ver_keys = local_prover.verifying_keys();
+    let final_build = OrchardBuilder::new(bundle_type, anchor);
+
+    // You might want to actually use builder and final_build here
 
     Ok(())
 }

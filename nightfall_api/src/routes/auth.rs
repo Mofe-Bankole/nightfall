@@ -2,10 +2,7 @@ use crate::{
     models::models::{AuthResponse, Claims, CreateUser, ErrorResponse, LoginUser, User},
     utils::constants::SALT_ROUNDS,
 };
-use axum::{
-    extract::{Extension, Json, State},
-    http::StatusCode,
-};
+use actix_web::{HttpResponse, Responder, web};
 use bcrypt::{hash, verify};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
@@ -17,7 +14,7 @@ use sqlx::{Error, PgPool, Row, postgres::PgRow};
 fn row_to_user(row: PgRow) -> User {
     User {
         id: row.get("id"),
-        user_name: row.get("username"),
+        user_name: row.get("name"),
         email: row.get("email"),
         password_hash: row.get("password_hash"),
         created_at: row.get("created_at"),
@@ -55,33 +52,23 @@ pub async fn sign_up_user(
     Ok(row_to_user(new_user_row))
 }
 
-#[axum::debug_handler]
 pub async fn register_user(
-    State(pool): State<PgPool>,
-    Json(payload): Json<CreateUser>,
-) -> Result<Json<AuthResponse>, (StatusCode, Json<ErrorResponse>)> {
-    let user = sign_up_user(&pool, &payload).await.map_err(|e| {
-        (
-            StatusCode::BAD_REQUEST,
-            Json(ErrorResponse {
-                error: e.to_string(),
-            }),
-        )
-    })?;
+    pool: web::Data<PgPool>,
+    payload: web::Json<CreateUser>,
+) -> impl Responder {
+    let payload = payload.into_inner();
 
-    let token = generate_token(&user).map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
+    match sign_up_user(pool.get_ref(), &payload).await {
+        Ok(user) => match generate_token(&user) {
+            Ok(token) => HttpResponse::Ok().json(AuthResponse { token, user }),
+            Err(_) => HttpResponse::InternalServerError().json(ErrorResponse {
                 error: "Failed To Generate Token".to_string(),
             }),
-        )
-    })?;
-
-    Ok(Json(AuthResponse {
-        token,
-        user: user.into(),
-    }))
+        },
+        Err(e) => HttpResponse::BadRequest().json(ErrorResponse {
+            error: e.to_string(),
+        }),
+    }
 }
 
 /// Logs User In
@@ -99,61 +86,47 @@ pub async fn login_user(pool: &PgPool, user: &LoginUser) -> Result<User, sqlx::E
     }
 }
 
-#[debug_handler]
 pub async fn sign_in_user(
-    Extension(pool): Extension<PgPool>,
-    Json(payload): Json<LoginUser>,
-) -> Result<Json<AuthResponse>, (StatusCode, Json<ErrorResponse>)> {
-    let user = login_user(&pool, &payload).await.map_err(|e| {
-        let status = match e {
-            Error::RowNotFound => StatusCode::NOT_FOUND,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        };
+    pool: web::Data<PgPool>,
+    payload: web::Json<LoginUser>,
+) -> impl Responder {
+    let payload = payload.into_inner();
 
-        return (
-            status,
-            Json(ErrorResponse {
-                error: match e {
-                    Error::RowNotFound => "User not found".to_string(),
-                    _ => "Internal server error".to_string(),
-                },
-            }),
-        );
-    })?;
+    let user = match login_user(pool.get_ref(), &payload).await {
+        Ok(user) => user,
+        Err(e) => {
+            return match e {
+                Error::RowNotFound => HttpResponse::NotFound().json(ErrorResponse {
+                    error: "User not found".to_string(),
+                }),
+                _ => HttpResponse::InternalServerError().json(ErrorResponse {
+                    error: "Internal server error".to_string(),
+                }),
+            };
+        }
+    };
 
-    // Verify password
-    let is_valid = verify(&payload.password, &user.password_hash).map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
+    let is_valid = match verify(&payload.password, &user.password_hash) {
+        Ok(valid) => valid,
+        Err(_) => {
+            return HttpResponse::InternalServerError().json(ErrorResponse {
                 error: "Password Verification Failed".to_string(),
-            }),
-        )
-    })?;
+            });
+        }
+    };
 
     if !is_valid {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            Json(ErrorResponse {
-                error: "Invalid credentials".to_string(),
-            }),
-        ));
+        return HttpResponse::Unauthorized().json(ErrorResponse {
+            error: "Invalid Credentials".to_string(),
+        });
     }
 
-    // Generate token
-    let token = generate_token(&user).map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: "Failed to generate token".to_string(),
-            }),
-        )
-    })?;
-
-    Ok(Json(AuthResponse {
-        token,
-        user: user.into(),
-    }))
+    match generate_token(&user) {
+        Ok(token) => HttpResponse::Ok().json(AuthResponse { token, user }),
+        Err(_) => HttpResponse::InternalServerError().json(ErrorResponse {
+            error: "Failed to generate token".to_string(),
+        }),
+    }
 }
 
 pub fn generate_token(user: &User) -> Result<String, jsonwebtoken::errors::Error> {

@@ -2,13 +2,12 @@ use anyhow::{Ok, anyhow};
 use orchard::Anchor;
 use pczt::Pczt;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-// use zcash_client_backend::wallet::tx_builder::TransactionBuilder;
+
 use zcash_client_backend::{
     encoding::decode_payment_address,
     keys::sapling::{ExtendedFullViewingKey, ExtendedSpendingKey},
 };
-use zcash_primitives::{memo::Memo, transaction::builder::Builder};
+use zcash_primitives::transaction::builder::Builder;
 use zcash_proofs::prover::LocalTxProver;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -155,18 +154,18 @@ pub enum ChangeDestination {
     Address(String), // explicit address
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Prover {
-    #[serde(default)]
+    // #[serde(default)]
     pub spending_key: Option<String>, // Unified spending key
-    #[serde(default)]
+    // #[serde(default)]
     pub sapling_spending_key: Option<String>, // Sapling-specific key
-    #[serde(default)]
+    // #[serde(default)]
     pub orchard_spending_key: Option<String>, // CRITICAL: Orchard spending key
-    #[serde(default)]
+    // #[serde(default)]
     pub proof_blobs: Vec<String>,
-    #[serde(default)]
-S    pub pczt_signed_tx_hex: Option<String>,
+    // #[serde(default)]
+    pub pczt_signed_tx_hex: Option<String>,
     // Remove serde(default) for anchor since Anchor does not implement Deserialize
     pub anchor: Option<Anchor>, // Merkle tree anchor for notes
 }
@@ -174,7 +173,7 @@ S    pub pczt_signed_tx_hex: Option<String>,
 #[derive(Debug, Clone)]
 pub struct UnsignedBundle {
     pub prover: Prover,
-    #[serde(default)]
+    // #[serde(default)]
     pub anchor: Anchor,
 }
 
@@ -204,8 +203,10 @@ impl PCZTBuilder {
 
             // Network (testnet , mainnet , rregtest)
             let hrp = data.network.hrp();
-            decode_payment_address(hrp, &out.address)
-                .map_err(|_| anyhow!("Invalid Sapling Address : {}", out.address))?;
+
+            if hrp == "ztestsapling" {
+                decode_payment_address(hrp, &out.address).unwrap();
+            }
         }
 
         // Validate Orchard outputs
@@ -234,7 +235,7 @@ impl PCZTBuilder {
         }
 
         // fee is 1000 zatoshis
-        let data_fee = data.fee.expect("no zatoshis");
+        let data_fee = data.fee.expect("UNSUPPLIED ZATOSHIS");
 
         Ok(Self {
             network: data.network,

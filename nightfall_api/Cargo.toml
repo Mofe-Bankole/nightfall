@@ -11,30 +11,33 @@ zcash_address = { git ="https://github.com/zcash/librustzcash.git", rev = "9f47d
 zcash_transparent = { git ="https://github.com/zcash/librustzcash.git", rev = "9f47de6"}
 zcash_proofs = { git ="https://github.com/zcash/librustzcash.git", rev = "9f47de6", features = ["bundled-prover"]}
 zcash_keys = { git ="https://github.com/zcash/librustzcash.git", rev = "9f47de6", features = ["orchard", "sapling", "transparent-inputs"]}
-zcash_encoding = "0.3.0"
 
 # HTTP
 anyhow = "1.0.100"
-axum-macros = "0.5.0"
 tokio = { version = "1.48.0", features = ["full"] }
-axum = {version ="0.8.4" , features=["macros"]}
-axum-extra = "0.12.2"
 reqwest = { version = "0.12", features = ["json"] }
+actix-web = "4.12.0"
 
 # ZCASH crates
 
 # UTILS
-bcrypt = "0.17.1"
 orchard = "0.11.0"
 dotenv = "0.15.0"
 pczt = "=0.3.0"
 serde = "1.0.228"
 serde_json = "1.0.145"
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "macros", "chrono"] }
+
 hex = "0.4"
 
 jsonwebtoken = { version = "10.2.0" , features = ["rust_crypto"] }
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 chrono = { version = "0.4.41", features = ["serde"] }
-tonic = "0.14.2"
+tonic = { version = "0.14.2", default-features = false, features = [
+"tls-native-roots"
+] }
 prost = "0.13"
+
+
+# SQL
+zcash_client_sqlite = { version = "0.9", features = ["transparent-inputs"] }
+sha2 = "0.10.9"
