@@ -43,3 +43,4 @@ rand = "0.9.2"
 jsonwebtoken = { version = "10.2.0" , features = ["rust_crypto"] }
 bip39 = "2.2.0"
 zip32 = "0.2.1"
+zip321 = "0.6.0"

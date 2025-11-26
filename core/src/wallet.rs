@@ -24,7 +24,7 @@ impl Wallet {
         //generate seed phrase (pls do not REVEAL THIS AT ANY TIME)
         // even though this is on TESTNET
         let seed_phrase = Key_Generation_Service::generate_seed_phrase();
-        
+
         let state = WalletState {
             mnemonic,
             seed,
@@ -33,6 +33,7 @@ impl Wallet {
             transactions: Vec::new(),
             balances_record: HashMap::new(),
         };
+
         Self::new(Some(state))
     }
 }

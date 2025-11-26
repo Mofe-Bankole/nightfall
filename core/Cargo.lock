@@ -2112,6 +2112,7 @@ dependencies = [
  "zcash_protocol 0.7.1 (git+https://github.com/zcash/librustzcash.git?rev=9f47de6)",
  "zcash_transparent 0.6.1 (git+https://github.com/zcash/librustzcash.git?rev=9f47de6)",
  "zip32",
+ "zip321 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

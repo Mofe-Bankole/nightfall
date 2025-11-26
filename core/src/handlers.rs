@@ -7,5 +7,9 @@ use crate::keys::Key_Generation_Service;
 //
 // In the directory above there is a comprehensive README.md file that explains how to use this project.
 
-static database_manager : DatabaseManger = DatabaseManger::new();
-let seed_phrase = Key_Generation_Service::generate_seed_phrase();
+pub struct Handler{
+    wallet : Wallet,
+    database : DatabaseManager,
+    key_generation_service : Key_Generation_Service,
+
+}

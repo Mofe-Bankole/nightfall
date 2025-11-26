@@ -1,7 +1,15 @@
 use anyhow::Context;
-
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 pub struct NightfallAPIClient;
-
+#[derive(Debug , Serialize , Deserialize)]
+pub struct BlockchainStats{
+    pub blockhain_height : u64,
+    pub latest_block_time : u64,
+}
+pub struct Stats{
+    pub blockhain_height : u32,
+}
 pub async fn get_latest_block_height_raw() -> anyhow::Result<reqwest::Response> {
     let client = reqwest::Client::new();
 
@@ -34,3 +42,20 @@ pub async fn get_transaction_by_id(txid: &str) -> anyhow::Result<reqwest::Respon
 
     Ok(response)
 }
+
+pub async fn fetch_latest_block_height() -> anyhow::Result<reqwest::Response> {
+    let client = reqwest::Client::new();
+
+    let url = "https://api.testnet.cipherscan.app/api/network/stats";
+
+    let response = client
+        .get(url)
+        .send()
+        .await?
+        .json::<BlockchainStats>()
+        .await?;
+
+    // let height = response["blockchain"]["height"];
+    // let parsed_height = height.await;
+    Ok(response)
+} 

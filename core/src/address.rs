@@ -55,6 +55,8 @@ impl ZcashAddress {
 pub struct AddressGenerationService;
 
 impl AddressGenerationService {
+
+
     pub fn seed_from_mnemonic(mnemonic: &str) -> Result<[u8; 64], AddressError> {
         let seed = Mnemonic::parse(mnemonic)
             .map_err(|_| AddressError::InvalidSeedPhrase)?
@@ -73,8 +75,11 @@ impl AddressGenerationService {
         let spending_key = Key_Generation_Service::derive_zcash_spending_key(seed, account);
         let (_, payment_address) = spending_key.default_address();
 
-        let encoded = encode_payment_address_p(&TEST_NETWORK, &payment_address);
 
+        // todo
+        // Store public address as plain text in sqliteDB
+        let encoded = encode_payment_address_p(&TEST_NETWORK, &payment_address);
+        println!("{}",encoded);
         Ok(ZcashAddress::new(encoded, AddressType::Shielded, account))
     }
 
@@ -85,7 +90,7 @@ impl AddressGenerationService {
     ) -> Result<ZcashAddress, AddressError> {
         let account_id = AccountId::try_from(account).map_err(|_| AddressError::InvalidAccount)?;
         
-        // creates a new accounts PRIVATE KEY
+        // Creates a new accounts PRIVATE KEY
         // 
         // Data is not to be shared
         let account_sk = AccountPrivKey::from_seed(&TEST_NETWORK, seed, account_id)
@@ -109,10 +114,30 @@ impl AddressGenerationService {
     pub fn validate_address(address: &str) -> Result<(), AddressError> {
         // In production, this would use zcash_primitives to validate the address
         // For now, we'll create a placeholder format
-        if address.starts_with("z1") || address.starts_with("t1") {
+        if address.starts_with("z1") || address.starts_with("t1") || address.starts_with("t3") || address.starts_with("u1"){
             Ok(())
         } else {
             Err(AddressError::InvalidAddress)
         }
+    }
+
+
+
+    /// Generates a shielded address from a mnemonic phrase
+    pub fn generate_shielded_address_from_mnemonic(
+        mnemonic: &str,
+        account: u32,
+    ) -> Result<ZcashAddress, AddressError> {
+        let seed = AddressGenerationService::seed_from_mnemonic(mnemonic)?;
+        AddressGenerationService::generate_shielded_address(&seed, account)
+    }
+    
+    /// Generates a transparent address from a mnemonic phrase
+    pub fn generate_transparent_address_from_mnemonic(
+        mnemonic: &str,
+        account: u32,
+    ) -> Result<ZcashAddress, AddressError> {
+        let seed = AddressGenerationService::seed_from_mnemonic(mnemonic)?;
+        AddressGenerationService::generate_transparent_address(&seed, account)
     }
 }
