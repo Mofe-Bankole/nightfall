@@ -1,15 +1,16 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+
 pub struct NightfallAPIClient;
-#[derive(Debug , Serialize , Deserialize)]
-pub struct BlockchainStats{
-    pub blockhain_height : u64,
-    pub latest_block_time : u64,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BlockchainStats {
+    pub blockhain_height: u64,
+    pub latest_block_time: u64,
 }
-pub struct Stats{
-    pub blockhain_height : u32,
+pub struct Stats {
+    pub blockhain_height: u32,
 }
+
 pub async fn get_latest_block_height_raw() -> anyhow::Result<reqwest::Response> {
     let client = reqwest::Client::new();
 
@@ -43,7 +44,7 @@ pub async fn get_transaction_by_id(txid: &str) -> anyhow::Result<reqwest::Respon
     Ok(response)
 }
 
-pub async fn fetch_latest_block_height() -> anyhow::Result<reqwest::Response> {
+pub async fn fetch_latest_block_height() -> anyhow::Result<BlockchainStats> {
     let client = reqwest::Client::new();
 
     let url = "https://api.testnet.cipherscan.app/api/network/stats";
@@ -58,4 +59,26 @@ pub async fn fetch_latest_block_height() -> anyhow::Result<reqwest::Response> {
     // let height = response["blockchain"]["height"];
     // let parsed_height = height.await;
     Ok(response)
-} 
+}
+
+// pub async fn send_raw_transaction(tx: &str) -> anyhow::Result<reqwest::Response> {
+//     let client = reqwest::Client::new();
+
+//     let mut headers = reqwest::header::HeaderMap::new();
+
+//     headers.insert(
+//         reqwest::header::CONTENT_TYPE,
+//         reqwest::header::HeaderValue::from_static("application/json"),
+//     );
+
+//     let url = "https://api.testnet.cipherscan.app/api/tx";
+//     let response = client
+//         .post(url)
+//         .headers(headers)
+//         .body(tx.to_string())
+//         .send()
+//         .await
+//         .context("Failed to send raw transaction")?;
+
+//     Ok(response)
+// }

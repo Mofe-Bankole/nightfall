@@ -25,6 +25,7 @@ impl Key_Generation_Service {
     /// Generates a seed phrase (pls do not share this with anyone)
     pub fn generate_seed_phrase() -> String {
         let mut entropy = [0u8; 32];
+        #[allow(unused_must_use)]
         OsRng
             .try_fill_bytes(&mut entropy)
             .map_err(|e| anyhow!("Unknown Error : {}", e));
@@ -47,8 +48,8 @@ impl Key_Generation_Service {
 
         let seed_bytes = mnemonic.to_seed(seed_phrase);
 
-        let extsk = ExtendedSpendingKey::master(&seed_bytes);
         #[allow(deprecated)]
+        let extsk = ExtendedSpendingKey::master(&seed_bytes);
         let extfvk = extsk.to_extended_full_viewing_key();
 
         let spending_key_hex =

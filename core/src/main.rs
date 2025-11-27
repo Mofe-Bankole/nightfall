@@ -1,6 +1,10 @@
 use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+use rand::rngs::OsRng;
+use rusqlite::{Connection, Params};
 use std::io;
+use zcash_client_sqlite::util::Clock;
 
+use crate::db::DatabaseManger;
 
 // use crate::{db::db::connect_db, routes::wallet::create_wallet};
 
@@ -21,10 +25,10 @@ async fn index() -> impl Responder {
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     dotenv::dotenv().ok();
-
+    let dbm = DatabaseManger::init_user_db();
+    let walletdb = DatabaseManger::init_wallet_db();
     HttpServer::new(move || {
         App::new()
-            // .app_data(pool_data.clone())
             .route("/", web::get().to(index))
             .service(web::scope("/api/v1"))
         // .route("/api/v1/create/seed-phrase", web::get().to(keygen_service))

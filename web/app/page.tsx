@@ -15,11 +15,11 @@ export default function Home() {
   const router = useRouter();
 
   const handleCreateWallet = () => {
-    router.push("/create/wallet");
+    router.push("/wallet/create");
   };
 
   const handleUseExistingWallet = () => {
-    router.push("/use/wallet");
+    router.push("/wallet/find");
   };
 
   return (
