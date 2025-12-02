@@ -72,7 +72,6 @@ export default function DashBoard() {
         </h3>
         <div className="items-center flex">
           <h3 className="text-xl mr-3.5">
-            {" "}
             ZEC : $
             {getTokenPrice(
               "https://api.diadata.org/v1/assetQuotation/Zcash/0x0000000000000000000000000000000000000000",
