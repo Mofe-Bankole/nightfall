@@ -5,9 +5,13 @@ use zcash_client_sqlite::{WalletDb, util::SystemClock};
 use zcash_protocol::consensus::{TEST_NETWORK, TestNetwork};
 
 // #[derive(Debug)]
-pub struct DatabaseManger;
+pub struct DatabaseManager;
 
-impl DatabaseManger {
+impl DatabaseManager {
+    pub fn init() -> Self {
+        Self
+    }
+
     pub fn init_user_db() -> Result<Connection, anyhow::Error> {
         let user_db = rusqlite::Connection::open("./storage/user_db.db")
             .map_err(|e| anyhow!("Unable To Fetch Database : {}", e))?;

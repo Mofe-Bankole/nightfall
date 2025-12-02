@@ -1,8 +1,8 @@
-
 import React from "react";
 
-type ModalProps = {
+export type ModalProps = {
   isOpen: boolean;
+  action: string;
   onClose: () => void;
 };
 
@@ -11,7 +11,7 @@ export default function Modal({ isOpen, onClose }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed icanset-0 z-50 flex items-center justify-center"
       style={{ backdropFilter: "blur(6px)" }}
     >
       {/* Overlay to catch clicks outside the modal box */}

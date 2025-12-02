@@ -22,6 +22,9 @@ pub enum KeyError {
 pub struct Key_Generation_Service;
 
 impl Key_Generation_Service {
+    pub fn init() -> Self {
+        Self
+    }
     /// Generates a seed phrase (pls do not share this with anyone)
     pub fn generate_seed_phrase() -> String {
         let mut entropy = [0u8; 32];
@@ -50,6 +53,7 @@ impl Key_Generation_Service {
 
         #[allow(deprecated)]
         let extsk = ExtendedSpendingKey::master(&seed_bytes);
+        #[allow(deprecated)]
         let extfvk = extsk.to_extended_full_viewing_key();
 
         let spending_key_hex =

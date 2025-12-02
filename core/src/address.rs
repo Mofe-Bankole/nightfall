@@ -1,17 +1,18 @@
 use crate::keys::Key_Generation_Service;
 use bip39::Mnemonic;
+use orchard::keys::Diversifier;
+use zcash_client_backend::keys::UnifiedSpendingKey;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use zcash_keys::{
     address::{Receiver, UnifiedAddress},
-    encoding::{AddressCodec, encode_payment_address_p, encode_transparent_address_p},
+    encoding::{encode_payment_address_p, encode_transparent_address_p},
 };
 use zcash_protocol::consensus::TEST_NETWORK;
 use zcash_transparent::{
-    address::TransparentAddress,
     keys::{AccountPrivKey, IncomingViewingKey},
 };
-use zip32::AccountId;
+use zip32::{AccountId, Scope};
 
 /// Address Errors , Feel Free to add any other if you so derire
 #[derive(Debug, Error)]
@@ -73,11 +74,13 @@ impl AddressGenerationService {
 
         let mut seed_bytes = [0u8; 64];
         seed_bytes.copy_from_slice(&seed);
-
+        // println!("{}" , seed_bytes);
         Ok(seed_bytes)
     }
 
     /// Generates a shielded address from a seed and account index.
+    ///
+    /// Type ----- "u-address"
     pub fn generate_shielded_address(
         seed: &[u8; 64],
         account: u32,
@@ -93,6 +96,8 @@ impl AddressGenerationService {
     }
 
     /// Derives the external transparent receiver / address for the requested account.
+    ///
+    /// Type ----- "t-address"
     pub fn generate_transparent_address(
         seed: &[u8; 64],
         account: u32,
@@ -170,49 +175,38 @@ impl AddressGenerationService {
             account: account,
         })
     }
-
-    pub fn derive_sapling_address(
+    pub fn generate_unified_address(
         seed: &[u8; 64],
         account: u32,
-    ) -> Result<ZcashAddress, anyhow::Error> {
-        let spending_key = Key_Generation_Service::derive_zcash_spending_key(seed, account);
+    ) -> Result<ZcashAddress, AddressError> {
+        let usk =
+            UnifiedSpendingKey::from_seed(&TEST_NETWORK, seed, AccountId::try_from(account).unwrap())
+                .map_err(|_| AddressError::FailedKeyGen)
+                .unwrap();
 
-        let (_, payment_address) = spending_key.default_address();
-        let encoded = encode_payment_address_p(&TEST_NETWORK, &payment_address);
-        let address = ZcashAddress::new(encoded, AddressType::Shielded, account);
-        Ok(address)
+        // full viewing
+        let ufvk = usk.to_unified_full_viewing_key();
+        let diversifier = ufvk.orchard().then()
+        let orchard_address = ufvk.orchard().expect("No orchard key generated").address(Diversifier::fro, Scope::External);
+
+        let orchard_receiver = Receiver::Orchard(orchard_address);
+
+        let transparent_addr = ufvk
+            .transparent()
+            .and_then(|t| {
+                let (_, taddr) = t.default_address();
+                Some(taddr)
+            });
+
+        let t_addr = ufvk.transparent().map(|pk| {
+            let ivk = ufvk.to_unified_incoming_viewing_key();
+        });
+        let sapling_receiver = None;
+        let ua = UnifiedAddress::from_receivers(orchard_receiver, None, transparent);
+        return Ok(ZcashAddress{
+            account,
+            address,
+            address_type : AddressType::Shielded
+        });
     }
-
-    pub fn derive_unified_address(
-        &mut self,
-        seed: &[u8; 64],
-        account: u32,
-    ) -> Result<ZcashAddress, anyhow::Error> {
-        // SAPLING
-        let sk = Key_Generation_Service::derive_zcash_spending_key(seed, account);
-
-        #[allow(deprecated)]
-        let fvk = sk.to_extended_full_viewing_key();
-        let (_d, sapling) = fvk.default_address();
-        let sapling_receiver = Receiver::Sapling(sapling);
-        // let orchard_receiver = Receiver::Orchard(sapling);
-
-        let t_addr = Self::derive_transparent_address(seed, account).unwrap();
-        let transparent_raw = TransparentAddress::decode(&TEST_NETWORK, &t_addr.address);
-        let transparent_receiver = Receiver::Transparent(transparent_raw.unwrap());
-
-        let ua = UnifiedAddress::from_receivers(transparent_receiver, sapling_receiver)?;
-    }
-    use orchard::keys::{SpendingKey as OrchardSpendingKey, FullViewingKey as OrchardFullViewingKey};
-    use zcash_protocol::consensus::Network;
-
-    pub fn derive_orchard_keys(seed: &[u8; 32]) -> (OrchardSpendingKey, OrchardFullViewingKey) {
-        // Orchard uses a 32-byte seed for the spending key
-        let sk = OrchardSpendingKey::from_zip32_seed(seed, 0)
-            .expect("32-byte seed always works");
-        let fvk = OrchardFullViewingKey::from(&sk);
-
-        (sk, fvk)
-    }
-
 }
