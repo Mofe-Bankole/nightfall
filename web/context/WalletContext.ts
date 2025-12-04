@@ -11,7 +11,7 @@ import React, {
 
 const API_BASE_URL = process.env.API_PORT;
 
-type Wallet = {
+export type Wallet = {
   seed_phrase: any;
   private_key?: string;
   public_key?: string;
@@ -78,7 +78,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(undefined);
       try {
-        const { data } = await client.post("/api/v1/create/wallet", input);
+        const { data } = await client.post("/api/v1/wallet/create", input);
         const nextSession: Session = {
           user: data?.user,
           token: data?.token,

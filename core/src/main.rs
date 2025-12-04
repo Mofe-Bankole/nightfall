@@ -3,9 +3,9 @@ use std::io;
 
 pub mod address;
 pub mod api_client;
+pub mod app_state;
 pub mod constants;
 pub mod db;
-pub mod handlers;
 pub mod keys;
 pub mod lighwalletd_client;
 pub mod models;
@@ -18,11 +18,14 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    // dotenv::dotenv().ok();
+    dotenv::dotenv().ok();
+
     HttpServer::new(move || {
         App::new()
             .route("/", web::get().to(index))
-            .service(web::scope("x`api/v1"))
+            // .route("/api/v1/create/wallet", web::post().to(create_new_wallet))
+            .service(web::scope("api/v1"))
+            .route("/wallet/create", web::post().to(create_new_wallet))
     })
     .bind("0.0.0.0:7654")?
     .run()

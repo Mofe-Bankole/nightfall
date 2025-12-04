@@ -33,7 +33,7 @@ tonic = { version = "0.14.2", default-features = false, features = [
 prost = "0.13"
 
 # SQL
-rusqlite = { version = "0.37", features = ["bundled"] }
+rusqlite = { version = "0.37", features = ["bundled", "sqlcipher"] }
 zcash_client_sqlite = "0.19.0"
 thiserror = "2.0.17"
 
@@ -44,3 +44,4 @@ jsonwebtoken = { version = "10.2.0" , features = ["rust_crypto"] }
 bip39 = "2.2.0"
 zip32 = "0.2.1"
 zip321 = "0.6.0"
+argon2 = "0.5.3"

@@ -1,17 +1,15 @@
 use crate::keys::Key_Generation_Service;
 use bip39::Mnemonic;
-use orchard::keys::Diversifier;
-use zcash_client_backend::keys::UnifiedSpendingKey;
+// use orchard::keys::Diversifier;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+// use zcash_client_backend::keys::UnifiedSpendingKey;
 use zcash_keys::{
-    address::{Receiver, UnifiedAddress},
+    // address::{Receiver, UnifiedAddress},
     encoding::{encode_payment_address_p, encode_transparent_address_p},
 };
 use zcash_protocol::consensus::TEST_NETWORK;
-use zcash_transparent::{
-    keys::{AccountPrivKey, IncomingViewingKey},
-};
+use zcash_transparent::keys::{AccountPrivKey, IncomingViewingKey};
 use zip32::{AccountId, Scope};
 
 /// Address Errors , Feel Free to add any other if you so derire
@@ -66,6 +64,7 @@ pub struct AddressGenerationService;
 impl AddressGenerationService {
     /// Generates a seed from a mnemonic phrase.
     ///
+    /// Examples of seed phrases : abandon abandon abandon.........about
     // todo pass this as json
     pub fn seed_from_mnemonic(mnemonic: &str) -> Result<[u8; 64], AddressError> {
         let seed = Mnemonic::parse(mnemonic)
@@ -74,7 +73,6 @@ impl AddressGenerationService {
 
         let mut seed_bytes = [0u8; 64];
         seed_bytes.copy_from_slice(&seed);
-        // println!("{}" , seed_bytes);
         Ok(seed_bytes)
     }
 
@@ -157,7 +155,7 @@ impl AddressGenerationService {
     }
 
     // Derives Transparent Address from seed
-    pub fn derive_transparent_address(
+    pub fn derive_transparent_address_from_seed(
         seed: &[u8; 64],
         account: u32,
     ) -> Result<ZcashAddress, anyhow::Error> {
@@ -175,38 +173,53 @@ impl AddressGenerationService {
             account: account,
         })
     }
-    pub fn generate_unified_address(
-        seed: &[u8; 64],
-        account: u32,
-    ) -> Result<ZcashAddress, AddressError> {
-        let usk =
-            UnifiedSpendingKey::from_seed(&TEST_NETWORK, seed, AccountId::try_from(account).unwrap())
-                .map_err(|_| AddressError::FailedKeyGen)
-                .unwrap();
 
-        // full viewing
-        let ufvk = usk.to_unified_full_viewing_key();
-        let diversifier = ufvk.orchard().then()
-        let orchard_address = ufvk.orchard().expect("No orchard key generated").address(Diversifier::fro, Scope::External);
+    // to do refractor
+    // pub fn generate_unified_address(
+    //     seed: &[u8; 64],
+    //     account: u32,
+    // ) -> Result<ZcashAddress, AddressError> {
+    //     // Derive the AccountId from the provided account parameter.
+    //     let account_id = AccountId::try_from(account)
+    //         .map_err(|_| AddressError::InvalidAccount)?;
 
-        let orchard_receiver = Receiver::Orchard(orchard_address);
+    //     // Generate the UnifiedSpendingKey using the seed and account ID.
+    //     let usk = UnifiedSpendingKey::from_seed(&TEST_NETWORK, seed, account_id)
+    //         .map_err(|_| AddressError::FailedKeyGen)?;
 
-        let transparent_addr = ufvk
-            .transparent()
-            .and_then(|t| {
-                let (_, taddr) = t.default_address();
-                Some(taddr)
-            });
+    //     // Get the UnifiedFullViewingKey.
+    //     let ufvk = usk.to_unified_full_viewing_key();
 
-        let t_addr = ufvk.transparent().map(|pk| {
-            let ivk = ufvk.to_unified_incoming_viewing_key();
-        });
-        let sapling_receiver = None;
-        let ua = UnifiedAddress::from_receivers(orchard_receiver, None, transparent);
-        return Ok(ZcashAddress{
-            account,
-            address,
-            address_type : AddressType::Shielded
-        });
-    }
+    //     // Helper closure to get transparent receiver, if present.
+    //     let t_receiver = ufvk.transparent()
+    //         .and_then(|t| {
+    //             let (taddr, _) = t.default_address();
+    //             Some(Receiver::Transparent(taddr))
+    //         });
+
+    //     // Helper closure to get orchard receiver, if present
+    //     let o_receiver = ufvk.orchard()
+    //         .and_then(|o| {
+    //             // In a real implementation the correct diversifier should be determined per key
+    //             let diversifier = Diversifier::from_bytes([0u8; 11]);
+    //             // Satisfy diverification and get address
+    //             match o.address(diversifier) {
+    //                 Some(addr) => Some(Receiver::Orchard(addr)),
+    //                 None => None
+    //             }
+    //         });
+
+    //     // Compose a unified address from available receivers
+    //     let ua = UnifiedAddress::from_receivers(
+    //         o_receiver,
+    //         None, // No Sapling receiver in this example
+    //         t_receiver
+    //     ).map_err(|_| AddressError::GenerationFailed)?;
+
+    //     Ok(ZcashAddress {
+    //         address: ua.to_string(),
+    //         address_type: AddressType::Shielded,
+    //         account,
+    //     })
+    // }
 }

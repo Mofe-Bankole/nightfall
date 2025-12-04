@@ -15,7 +15,7 @@ export default function Home() {
     router.push("/wallet/create");
   };
   const handleUseExistingWallet = () => {
-    router.push("/wallet/find");
+    router.push("/wallet/find/seed-phrase");
   };
   return (
     <div
