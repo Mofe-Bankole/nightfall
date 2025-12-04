@@ -1,14 +1,14 @@
-# Nightfall 🌙
+# Night.fall 
 
 A private, offline-first wallet for Zcash that keeps your data local and your transactions shielded.
 
 ## What's Nightfall?
 
-Nightfall is a secure wallet that stores everything on your device - no cloud, no tracking. It supports both unified and transparent addresses, automatically shielding your funds when you make payments. Plus, you can swap on NEAR right from the wallet.
+Nightfall is a secure wallet that stores everything on your device - no cloud, no tracking . It supports both unified and transparent addresses, automatically shielding your funds when you make payments. As an added feature, you can swap on NEAR right from the wallet.
 
 Multiple users? No problem. Everyone can have their own wallet on the same device without seeing each other's stuff.
 
-> **Heads up:** Nightfall is currently on testnet only.
+> **NOTE:** As at time of writing Nightfall is currently on testnet only.
 
 ## Getting Started
 
